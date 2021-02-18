@@ -1,0 +1,17 @@
+{
+  "name": "nodejs-crawler",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "cheerio": "^1.0.0-rc.5",
+    "csv-parse": "^4.15.1",
+    "xlsx": "^0.16.9"
+  }
+}
