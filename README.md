@@ -1,2 +1,2 @@
 # nodejs-crawler
-node.js로 크롤링하기
+node.js, puppeteer를 이용한 크롤링
