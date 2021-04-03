@@ -14,11 +14,24 @@ fs.readdir('poster', (err) => {
     fs.mkdirSync('poster')
   }
 })
+fs.readdir('screenshot', (err) => {
+  if (err) {
+    console.error('screenshot 폴더가 없어서 screenshot폴더를 생성합니다.')
+    fs.mkdirSync('screenshot')
+  }
+})
 
 const crawler = async () => {
   try {
-    const browser = await puppeteer.launch({ headless: process.env === 'production' }) // headless : 크롬 안 띄우고 백그라운드에서 실행
+    const browser = await puppeteer.launch({
+      headless: process.env === 'production', //크롬 안 띄우고 백그라운드에서 실행
+      args: ['--window-size=1920,1080']
+    })
     const page = await browser.newPage()
+    await page.setViewport({
+      width: 1920,
+      height: 1080
+    })
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36')
     addToSheet(ws, 'C1', 's', '평점')
     for (const [i, r] of records.entries()) {
@@ -44,6 +57,16 @@ const crawler = async () => {
         addToSheet(ws, newCell, 'n', parseFloat(text.trim()))
       }
       if (result.img) {
+        await page.screenshot({
+          path: `screenshot/${r.제목}.png`,
+          // fullPage: true, 전체화면 캡쳐
+          clip: {
+            x: 100,
+            y: 100,
+            width: 300,
+            height: 300
+          }
+        })
         const imgResult = await axios.get(result.img.replace(/\?.*/, ''), {
           responseType: 'arraybuffer', //buffer가 연속적으로 들어있는 자료구조
 
