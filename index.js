@@ -1,10 +1,19 @@
 const puppeteer = require('puppeteer')
 const xlsx = require('xlsx')
 const addToSheet = require('./AddToSheet')
-
+const fs = require('fs')
+const { default: axios } = require('axios')
 const workbook = xlsx.readFile('xlsx/data.xlsx')
 const ws = workbook.Sheets.영화목록
 const records = xlsx.utils.sheet_to_json(ws)
+
+// 포스터 폴더가 없으면  만들어줌
+fs.readdir('poster', (err) => {
+  if (err) {
+    console.error('poster 폴더가 없어서 poster폴더를 생성합니다.')
+    fs.mkdirSync('poster')
+  }
+})
 
 const crawler = async () => {
   try {
@@ -16,16 +25,30 @@ const crawler = async () => {
       console.log('r', r)
       await page.goto(r.링크)
       console.log(await page.evaluate('navigator.userAgent'))
-      const text = await page.evaluate(() => {
-        const score = document.querySelector('.score.score_left .star_score')
-        if (score) {
-          return score.textContent
+      const result = await page.evaluate(() => {
+        const scoreEl = document.querySelector('.score.score_left .star_score')
+        let score = ''
+        if (scoreEl) {
+          score = score.textContent
         }
+        const imgEl = document.querySelector('.poster img')
+        let img = ''
+        if (imgEl) {
+          img = imgEl.src
+        }
+        return { score, img }
       })
-      if (text) {
-        console.log(r.제목, '평점', text.trim())
+      if (result.score) {
+        console.log(r.제목, '평점', result.score.trim())
         const newCell = 'C' + (i + 2)
         addToSheet(ws, newCell, 'n', parseFloat(text.trim()))
+      }
+      if (result.img) {
+        const imgResult = await axios.get(result.img.replace(/\?.*/, ''), {
+          responseType: 'arraybuffer', //buffer가 연속적으로 들어있는 자료구조
+
+        })
+        fs.writeFileSync(`poster/${r.제목}.jpg`, imgResult.data)
       }
       await page.waitFor(3000)
     }
